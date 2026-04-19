@@ -1,0 +1,116 @@
+{
+  "schema": "1.0",
+  "details": {
+    "displayName": "KIJA Mail Agent",
+    "description": "Analysiert eingehende E-Mails mit Claude AI und postet wichtige Mails als Adaptive Card in Microsoft Teams.",
+    "createdTime": "2026-04-19T08:00:00Z",
+    "packageTelemetryId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "creator": "KIJA",
+    "sourceEnvironment": ""
+  },
+  "resources": {
+    "a1b2c3d4-e5f6-7890-abcd-ef1234567890": {
+      "type": "Microsoft.Flow/flows",
+      "designerVersion": "2",
+      "id": "/providers/Microsoft.Flow/flows/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "properties": {
+        "apiName": "",
+        "definitionSummary": {
+          "triggers": [
+            {
+              "type": "ApiConnectionNotification",
+              "swaggerOperationId": "OnNewEmailV3",
+              "metadata": {
+                "operationMetadataId": "11111111-0000-0000-0000-000000000001"
+              }
+            }
+          ],
+          "actions": [
+            {"type": "InitializeVariable"},
+            {"type": "InitializeVariable"},
+            {"type": "InitializeVariable"},
+            {"type": "InitializeVariable"},
+            {"type": "If"},
+            {"type": "ApiConnection"},
+            {"type": "ApiConnection"},
+            {"type": "Http"},
+            {"type": "ParseJson"},
+            {"type": "If"},
+            {"type": "ApiConnection"}
+          ],
+          "description": "KIJA Mail Agent — Analysiert eingehende E-Mails mit Claude AI und postet Notifications in Teams."
+        },
+        "creator": {
+          "tenantId": "",
+          "objectId": "",
+          "userId": "",
+          "userDisplayName": "KIJA"
+        },
+        "flowFailureAlertSubscribed": false,
+        "isManaged": false,
+        "connectionReferences": {
+          "shared_office365": {
+            "api": {
+              "name": "shared_office365"
+            },
+            "connection": {
+              "id": ""
+            },
+            "runtimeSource": "invoker"
+          },
+          "shared_teams": {
+            "api": {
+              "name": "shared_teams"
+            },
+            "connection": {
+              "id": ""
+            },
+            "runtimeSource": "invoker"
+          }
+        },
+        "triggerSchema": {}
+      },
+      "type": "Microsoft.Flow/flows",
+      "createdTime": "2026-04-19T08:00:00Z",
+      "changedTime": "2026-04-19T08:00:00Z",
+      "configurableBy": "User",
+      "hierarchy": "Root",
+      "dependsOn": []
+    },
+    "shared_office365": {
+      "type": "Microsoft.PowerApps/apis/connections",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+      "name": "shared_office365",
+      "properties": {
+        "displayName": "shared_office365",
+        "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1549/1.0.1549.2748/office365/icon.png",
+        "purpose": "NotSpecified",
+        "apiTier": "Standard",
+        "isCustomApi": false,
+        "description": "Use this connector to communicate with your Office 365 Exchange email account."
+      },
+      "type": "Microsoft.PowerApps/apis/connections",
+      "configurableBy": "User",
+      "hierarchy": "Child",
+      "dependsOn": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
+    },
+    "shared_teams": {
+      "type": "Microsoft.PowerApps/apis/connections",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_teams",
+      "name": "shared_teams",
+      "properties": {
+        "displayName": "shared_teams",
+        "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1549/1.0.1549.2748/teams/icon.png",
+        "purpose": "NotSpecified",
+        "apiTier": "Standard",
+        "isCustomApi": false,
+        "description": "Microsoft Teams enables you to get all your content, tools and conversations in the Team workspace with Office 365."
+      },
+      "type": "Microsoft.PowerApps/apis/connections",
+      "configurableBy": "User",
+      "hierarchy": "Child",
+      "dependsOn": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
+    }
+  }
+}

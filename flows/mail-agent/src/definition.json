@@ -1,0 +1,356 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": ""
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_teams": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": ""
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Wenn_neue_E-Mail_eintrifft_(V3)": {
+          "metadata": {
+            "operationMetadataId": "11111111-0000-0000-0000-000000000001"
+          },
+          "type": "ApiConnectionNotification",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_office365",
+              "operationId": "OnNewEmailV3",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+            },
+            "parameters": {
+              "folderPath": "Inbox",
+              "importance": "Any",
+              "fetchOnlyWithAttachment": false,
+              "includeAttachments": false
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Init_AnthropicApiKey": {
+          "metadata": {
+            "operationMetadataId": "11111111-0000-0000-0000-000000000002"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AnthropicApiKey",
+                "type": "String",
+                "value": "DEIN_ANTHROPIC_API_KEY_HIER_EINSETZEN"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Init_SenderEmail": {
+          "metadata": {
+            "operationMetadataId": "11111111-0000-0000-0000-000000000003"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "SenderEmail",
+                "type": "String",
+                "value": "@triggerBody()?['from']"
+              }
+            ]
+          },
+          "runAfter": {
+            "Init_AnthropicApiKey": ["Succeeded"]
+          }
+        },
+        "Init_EmailSubject": {
+          "metadata": {
+            "operationMetadataId": "11111111-0000-0000-0000-000000000004"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "EmailSubject",
+                "type": "String",
+                "value": "@triggerBody()?['subject']"
+              }
+            ]
+          },
+          "runAfter": {
+            "Init_SenderEmail": ["Succeeded"]
+          }
+        },
+        "Init_EmailBody": {
+          "metadata": {
+            "operationMetadataId": "11111111-0000-0000-0000-000000000005"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "EmailBody",
+                "type": "String",
+                "value": "@triggerBody()?['body']"
+              }
+            ]
+          },
+          "runAfter": {
+            "Init_EmailSubject": ["Succeeded"]
+          }
+        },
+        "Early_Exit_Filter": {
+          "metadata": {
+            "operationMetadataId": "11111111-0000-0000-0000-000000000006"
+          },
+          "type": "If",
+          "expression": {
+            "or": [
+              {
+                "contains": [
+                  "@toLower(variables('SenderEmail'))",
+                  "noreply"
+                ]
+              },
+              {
+                "contains": [
+                  "@toLower(variables('SenderEmail'))",
+                  "no-reply"
+                ]
+              },
+              {
+                "contains": [
+                  "@toLower(variables('SenderEmail'))",
+                  "donotreply"
+                ]
+              },
+              {
+                "contains": [
+                  "@toLower(variables('SenderEmail'))",
+                  "mailer-daemon"
+                ]
+              },
+              {
+                "contains": [
+                  "@toLower(variables('SenderEmail'))",
+                  "newsletter"
+                ]
+              },
+              {
+                "contains": [
+                  "@toLower(variables('EmailSubject'))",
+                  "unsubscribe"
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Terminate_AutoMail": {
+              "metadata": {
+                "operationMetadataId": "11111111-0000-0000-0000-000000000007"
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Succeeded"
+              },
+              "runAfter": {}
+            }
+          },
+          "else": {
+            "actions": {
+              "Get_Absender_Historie": {
+                "metadata": {
+                  "operationMetadataId": "11111111-0000-0000-0000-000000000008"
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_office365",
+                    "operationId": "GetEmailsV2",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                  },
+                  "parameters": {
+                    "folderPath": "Inbox",
+                    "from": "@variables('SenderEmail')",
+                    "fetchOnlyUnread": false,
+                    "top": 5,
+                    "importance": "Any"
+                  },
+                  "authentication": "@parameters('$authentication')"
+                },
+                "runAfter": {}
+              },
+              "Get_Kalender_Events": {
+                "metadata": {
+                  "operationMetadataId": "11111111-0000-0000-0000-000000000009"
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_office365",
+                    "operationId": "GetEventsCalendarViewV2",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                  },
+                  "parameters": {
+                    "calendarId": "Calendar",
+                    "$filter": "@concat('contains(body, ''', variables('SenderEmail'), ''') or contains(requiredAttendees, ''', variables('SenderEmail'), '''')",
+                    "$top": 3,
+                    "$orderby": "start/dateTime desc"
+                  },
+                  "authentication": "@parameters('$authentication')"
+                },
+                "runAfter": {
+                  "Get_Absender_Historie": ["Succeeded", "Failed"]
+                }
+              },
+              "Call_Claude_API": {
+                "metadata": {
+                  "operationMetadataId": "11111111-0000-0000-0000-00000000000a"
+                },
+                "type": "Http",
+                "inputs": {
+                  "method": "POST",
+                  "uri": "https://api.anthropic.com/v1/messages",
+                  "headers": {
+                    "x-api-key": "@variables('AnthropicApiKey')",
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json"
+                  },
+                  "body": {
+                    "model": "claude-opus-4-7",
+                    "max_tokens": 1024,
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "@{concat('Du bist ein E-Mail-Assistent für KIJA. Analysiere diese eingehende E-Mail und antworte AUSSCHLIESSLICH mit validem JSON, ohne weiteren Text.\n\nAbsender: ', variables('SenderEmail'), '\nBetreff: ', variables('EmailSubject'), '\nInhalt:\n', variables('EmailBody'), '\n\nKontext:\n- Frühere E-Mails von diesem Absender (letzte 5): ', string(length(body('Get_Absender_Historie')?['value'])), ' gefunden\n- Kalender-Termine mit diesem Absender: ', string(length(body('Get_Kalender_Events')?['value'])), ' gefunden\n\nAntworte NUR mit diesem JSON:\n{\n  \"prioritaet\": <Zahl 1-5, wobei 5 = höchste Priorität>,\n  \"zusammenfassung\": \"<Zusammenfassung in 1-2 Sätzen>\",\n  \"handlungsempfehlung\": \"<Konkrete Empfehlung was zu tun ist>\",\n  \"kategorie\": \"<Anfrage|Information|Aufgabe|Eskalation|Spam>\",\n  \"antwort_erforderlich\": <true oder false>,\n  \"deadline\": \"<Datum falls erkennbar, sonst null>\"\n}')}"
+                      }
+                    ]
+                  }
+                },
+                "runAfter": {
+                  "Get_Kalender_Events": ["Succeeded", "Failed"]
+                }
+              },
+              "Parse_Claude_Response": {
+                "metadata": {
+                  "operationMetadataId": "11111111-0000-0000-0000-00000000000b"
+                },
+                "type": "ParseJson",
+                "inputs": {
+                  "content": "@body('Call_Claude_API')?['content']?[0]?['text']",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "prioritaet": {
+                        "type": "integer"
+                      },
+                      "zusammenfassung": {
+                        "type": "string"
+                      },
+                      "handlungsempfehlung": {
+                        "type": "string"
+                      },
+                      "kategorie": {
+                        "type": "string"
+                      },
+                      "antwort_erforderlich": {
+                        "type": "boolean"
+                      },
+                      "deadline": {}
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Call_Claude_API": ["Succeeded"]
+                }
+              },
+              "Ignore_Filter": {
+                "metadata": {
+                  "operationMetadataId": "11111111-0000-0000-0000-00000000000c"
+                },
+                "type": "If",
+                "expression": {
+                  "less": [
+                    "@body('Parse_Claude_Response')?['prioritaet']",
+                    3
+                  ]
+                },
+                "actions": {
+                  "Terminate_LowPriority": {
+                    "metadata": {
+                      "operationMetadataId": "11111111-0000-0000-0000-00000000000d"
+                    },
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Succeeded"
+                    },
+                    "runAfter": {}
+                  }
+                },
+                "else": {
+                  "actions": {
+                    "Post_Teams_Adaptive_Card": {
+                      "metadata": {
+                        "operationMetadataId": "11111111-0000-0000-0000-00000000000e"
+                      },
+                      "type": "ApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_teams",
+                          "operationId": "PostCardToConversation",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+                        },
+                        "parameters": {
+                          "poster": "Flow bot",
+                          "location": "Channel",
+                          "body/recipient/groupId": "DEINE_TEAMS_GRUPPE_ID",
+                          "body/recipient/channelId": "DEIN_TEAMS_KANAL_ID",
+                          "body/messageBody": "@{\n  json(concat(\n    '{',\n    '\"$schema\":\"http://adaptivecards.io/schemas/adaptive-card.json\",',\n    '\"type\":\"AdaptiveCard\",',\n    '\"version\":\"1.4\",',\n    '\"body\":[',\n      '{\"type\":\"TextBlock\",\"text\":\"', if(greaterOrEquals(body('Parse_Claude_Response')?['prioritaet'], 4), '🔴', if(equals(body('Parse_Claude_Response')?['prioritaet'], 3), '🟡', '🟢')), ' Neue E-Mail — Priorität ', string(body('Parse_Claude_Response')?['prioritaet']), '/5\",\"weight\":\"Bolder\",\"size\":\"Large\"},',\n      '{\"type\":\"FactSet\",\"facts\":[',\n        '{\"title\":\"Von:\",\"value\":\"', variables('SenderEmail'), '\"},',\n        '{\"title\":\"Betreff:\",\"value\":\"', replace(variables('EmailSubject'), '\"', '\\\"'), '\"},',\n        '{\"title\":\"Kategorie:\",\"value\":\"', body('Parse_Claude_Response')?['kategorie'], '\"},',\n        '{\"title\":\"Antwort nötig:\",\"value\":\"', if(body('Parse_Claude_Response')?['antwort_erforderlich'], 'Ja ✓', 'Nein'), '\"},',\n        '{\"title\":\"Deadline:\",\"value\":\"', coalesce(body('Parse_Claude_Response')?['deadline'], 'Keine'), '\"}',\n      ']},',\n      '{\"type\":\"TextBlock\",\"text\":\"Zusammenfassung\",\"weight\":\"Bolder\",\"spacing\":\"Medium\"},',\n      '{\"type\":\"TextBlock\",\"text\":\"', replace(body('Parse_Claude_Response')?['zusammenfassung'], '\"', '\\\"'), '\",\"wrap\":true},',\n      '{\"type\":\"TextBlock\",\"text\":\"Empfehlung\",\"weight\":\"Bolder\",\"spacing\":\"Medium\"},',\n      '{\"type\":\"TextBlock\",\"text\":\"', replace(body('Parse_Claude_Response')?['handlungsempfehlung'], '\"', '\\\"'), '\",\"wrap\":true}',\n    ']'\n  '))\n}"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      },
+                      "runAfter": {}
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Parse_Claude_Response": ["Succeeded"]
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Init_EmailBody": ["Succeeded"]
+          }
+        }
+      }
+    }
+  }
+}
