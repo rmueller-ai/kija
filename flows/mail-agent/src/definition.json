@@ -2,64 +2,76 @@
   "properties": {
     "connectionReferences": {
       "shared_office365": {
-        "runtimeSource": "embedded",
-        "connection": {
-          "connectionReferenceLogicalName": ""
-        },
         "api": {
           "name": "shared_office365"
-        }
+        },
+        "connection": {
+          "id": ""
+        },
+        "runtimeSource": "invoker"
       },
       "shared_teams": {
-        "runtimeSource": "embedded",
-        "connection": {
-          "connectionReferenceLogicalName": ""
-        },
         "api": {
           "name": "shared_teams"
-        }
+        },
+        "connection": {
+          "id": ""
+        },
+        "runtimeSource": "invoker"
       }
     },
     "definition": {
       "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
       "contentVersion": "1.0.0.0",
       "parameters": {
-        "$authentication": {
-          "defaultValue": {},
-          "type": "SecureObject"
-        },
         "$connections": {
           "defaultValue": {},
           "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
         }
       },
       "triggers": {
-        "Wenn_neue_E-Mail_eintrifft_(V3)": {
-          "metadata": {
-            "operationMetadataId": "11111111-0000-0000-0000-000000000001"
-          },
+        "Wenn_neue_E-Mail_eintrifft": {
           "type": "ApiConnectionNotification",
           "inputs": {
             "host": {
-              "connectionName": "shared_office365",
-              "operationId": "OnNewEmailV3",
-              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+              "connection": {
+                "name": "@parameters('$connections')['shared_office365']['connectionId']"
+              }
             },
-            "parameters": {
-              "folderPath": "Inbox",
-              "importance": "Any",
-              "fetchOnlyWithAttachment": false,
-              "includeAttachments": false
+            "fetch": {
+              "method": "get",
+              "pathTemplate": {
+                "template": "/codeless/subscriptions/Mail/folders/Inbox/messages/onNewEmail"
+              },
+              "queries": {
+                "folderPath": "Inbox",
+                "importance": "Any",
+                "fetchOnlyWithAttachment": false,
+                "includeAttachments": false
+              }
             },
-            "authentication": "@parameters('$authentication')"
-          }
+            "subscribe": {
+              "method": "post",
+              "pathTemplate": {
+                "template": "/GraphBasedSubscriptions/subscriptions/Mail/folders/Inbox/messages/onNewEmail"
+              },
+              "queries": {
+                "folderPath": "Inbox",
+                "importance": "Any",
+                "fetchOnlyWithAttachment": false,
+                "includeAttachments": false
+              }
+            }
+          },
+          "splitOn": "@triggerBody()?['value']"
         }
       },
       "actions": {
         "Init_AnthropicApiKey": {
-          "metadata": {
-            "operationMetadataId": "11111111-0000-0000-0000-000000000002"
-          },
           "type": "InitializeVariable",
           "inputs": {
             "variables": [
@@ -73,16 +85,13 @@
           "runAfter": {}
         },
         "Init_SenderEmail": {
-          "metadata": {
-            "operationMetadataId": "11111111-0000-0000-0000-000000000003"
-          },
           "type": "InitializeVariable",
           "inputs": {
             "variables": [
               {
                 "name": "SenderEmail",
                 "type": "String",
-                "value": "@triggerBody()?['from']"
+                "value": "@triggerBody()?['From']"
               }
             ]
           },
@@ -91,16 +100,13 @@
           }
         },
         "Init_EmailSubject": {
-          "metadata": {
-            "operationMetadataId": "11111111-0000-0000-0000-000000000004"
-          },
           "type": "InitializeVariable",
           "inputs": {
             "variables": [
               {
                 "name": "EmailSubject",
                 "type": "String",
-                "value": "@triggerBody()?['subject']"
+                "value": "@triggerBody()?['Subject']"
               }
             ]
           },
@@ -109,16 +115,13 @@
           }
         },
         "Init_EmailBody": {
-          "metadata": {
-            "operationMetadataId": "11111111-0000-0000-0000-000000000005"
-          },
           "type": "InitializeVariable",
           "inputs": {
             "variables": [
               {
                 "name": "EmailBody",
                 "type": "String",
-                "value": "@triggerBody()?['body']"
+                "value": "@triggerBody()?['Body']"
               }
             ]
           },
@@ -127,9 +130,6 @@
           }
         },
         "Early_Exit_Filter": {
-          "metadata": {
-            "operationMetadataId": "11111111-0000-0000-0000-000000000006"
-          },
           "type": "If",
           "expression": {
             "or": [
@@ -173,9 +173,6 @@
           },
           "actions": {
             "Terminate_AutoMail": {
-              "metadata": {
-                "operationMetadataId": "11111111-0000-0000-0000-000000000007"
-              },
               "type": "Terminate",
               "inputs": {
                 "runStatus": "Succeeded"
@@ -186,54 +183,45 @@
           "else": {
             "actions": {
               "Get_Absender_Historie": {
-                "metadata": {
-                  "operationMetadataId": "11111111-0000-0000-0000-000000000008"
-                },
                 "type": "ApiConnection",
                 "inputs": {
                   "host": {
-                    "connectionName": "shared_office365",
-                    "operationId": "GetEmailsV2",
-                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                    "connection": {
+                      "name": "@parameters('$connections')['shared_office365']['connectionId']"
+                    }
                   },
-                  "parameters": {
+                  "method": "get",
+                  "path": "/v2/Mail",
+                  "queries": {
                     "folderPath": "Inbox",
                     "from": "@variables('SenderEmail')",
                     "fetchOnlyUnread": false,
                     "top": 5,
                     "importance": "Any"
-                  },
-                  "authentication": "@parameters('$authentication')"
+                  }
                 },
                 "runAfter": {}
               },
               "Get_Kalender_Events": {
-                "metadata": {
-                  "operationMetadataId": "11111111-0000-0000-0000-000000000009"
-                },
                 "type": "ApiConnection",
                 "inputs": {
                   "host": {
-                    "connectionName": "shared_office365",
-                    "operationId": "GetEventsCalendarViewV2",
-                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                    "connection": {
+                      "name": "@parameters('$connections')['shared_office365']['connectionId']"
+                    }
                   },
-                  "parameters": {
-                    "calendarId": "Calendar",
-                    "$filter": "@concat('contains(body, ''', variables('SenderEmail'), ''') or contains(requiredAttendees, ''', variables('SenderEmail'), '''')",
+                  "method": "get",
+                  "path": "/datasets/calendars/tables/calendar/items",
+                  "queries": {
                     "$top": 3,
                     "$orderby": "start/dateTime desc"
-                  },
-                  "authentication": "@parameters('$authentication')"
+                  }
                 },
                 "runAfter": {
                   "Get_Absender_Historie": ["Succeeded", "Failed"]
                 }
               },
               "Call_Claude_API": {
-                "metadata": {
-                  "operationMetadataId": "11111111-0000-0000-0000-00000000000a"
-                },
                 "type": "Http",
                 "inputs": {
                   "method": "POST",
@@ -246,10 +234,11 @@
                   "body": {
                     "model": "claude-opus-4-7",
                     "max_tokens": 1024,
+                    "system": "Du bist der MAIL-Agent, Subagent von KIJA, dem persoenlichen Assistenten von Rolf Mueller (Partner MUELLER PAPARIS AG, Zuerich). Klassifiziere eingehende E-Mails und entwirf wenn noetig eine Antwort im Stil von Rolf. Antworte AUSSCHLIESSLICH mit gueltigem JSON ohne Fliesstext. STIL: Schweizer Hochdeutsch (ss statt ss), Konjunktiv fuer juristische Aussagen, 'gerne' als Einstiegswort, 'Office' statt Sekretariat. ANREDE: Gericht='Sehr geehrter Herr Praesident + Geschaetztes Gericht', Mandant neu='Sehr geehrter Herr/Frau X', Mandant vertraut='Lieber Vorname', Kollege='Sehr geehrter Herr Kollege'. SCHLUSS: Gericht='kollegialiter', Mandant formell='Freundliche Gruesse' oder 'Besten Dank fuer Ihre Kenntnisnahme.', intern='glg'. OUTPUT JSON: {\"action\":\"ignore|notify|draft|urgent\",\"reasoning\":\"ein Satz\",\"category\":\"mandant|gericht|kollegen|admin|spam|newsletter\",\"priority\":1,\"draft_subject\":\"Re:...\",\"draft_body\":\"...\",\"open_questions\":[]}",
                     "messages": [
                       {
                         "role": "user",
-                        "content": "@{concat('Du bist ein E-Mail-Assistent für KIJA. Analysiere diese eingehende E-Mail und antworte AUSSCHLIESSLICH mit validem JSON, ohne weiteren Text.\n\nAbsender: ', variables('SenderEmail'), '\nBetreff: ', variables('EmailSubject'), '\nInhalt:\n', variables('EmailBody'), '\n\nKontext:\n- Frühere E-Mails von diesem Absender (letzte 5): ', string(length(body('Get_Absender_Historie')?['value'])), ' gefunden\n- Kalender-Termine mit diesem Absender: ', string(length(body('Get_Kalender_Events')?['value'])), ' gefunden\n\nAntworte NUR mit diesem JSON:\n{\n  \"prioritaet\": <Zahl 1-5, wobei 5 = höchste Priorität>,\n  \"zusammenfassung\": \"<Zusammenfassung in 1-2 Sätzen>\",\n  \"handlungsempfehlung\": \"<Konkrete Empfehlung was zu tun ist>\",\n  \"kategorie\": \"<Anfrage|Information|Aufgabe|Eskalation|Spam>\",\n  \"antwort_erforderlich\": <true oder false>,\n  \"deadline\": \"<Datum falls erkennbar, sonst null>\"\n}')}"
+                        "content": "@{concat('Neue E-Mail.\nVON: ', variables('SenderEmail'), '\nBETREFF: ', variables('EmailSubject'), '\nINHALT:\n', variables('EmailBody'), '\n\nKONTEXT:\n- Fruehere Mails von diesem Absender: ', string(length(body('Get_Absender_Historie')?['value'])), '\n- Kalender-Termine: ', string(length(body('Get_Kalender_Events')?['value'])))}"
                       }
                     ]
                   }
@@ -259,31 +248,36 @@
                 }
               },
               "Parse_Claude_Response": {
-                "metadata": {
-                  "operationMetadataId": "11111111-0000-0000-0000-00000000000b"
-                },
                 "type": "ParseJson",
                 "inputs": {
                   "content": "@body('Call_Claude_API')?['content']?[0]?['text']",
                   "schema": {
                     "type": "object",
                     "properties": {
-                      "prioritaet": {
+                      "action": {
+                        "type": "string"
+                      },
+                      "reasoning": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "priority": {
                         "type": "integer"
                       },
-                      "zusammenfassung": {
+                      "draft_subject": {
                         "type": "string"
                       },
-                      "handlungsempfehlung": {
+                      "draft_body": {
                         "type": "string"
                       },
-                      "kategorie": {
-                        "type": "string"
-                      },
-                      "antwort_erforderlich": {
-                        "type": "boolean"
-                      },
-                      "deadline": {}
+                      "open_questions": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
                     }
                   }
                 },
@@ -292,21 +286,15 @@
                 }
               },
               "Ignore_Filter": {
-                "metadata": {
-                  "operationMetadataId": "11111111-0000-0000-0000-00000000000c"
-                },
                 "type": "If",
                 "expression": {
                   "less": [
-                    "@body('Parse_Claude_Response')?['prioritaet']",
+                    "@body('Parse_Claude_Response')?['priority']",
                     3
                   ]
                 },
                 "actions": {
                   "Terminate_LowPriority": {
-                    "metadata": {
-                      "operationMetadataId": "11111111-0000-0000-0000-00000000000d"
-                    },
                     "type": "Terminate",
                     "inputs": {
                       "runStatus": "Succeeded"
@@ -317,24 +305,22 @@
                 "else": {
                   "actions": {
                     "Post_Teams_Adaptive_Card": {
-                      "metadata": {
-                        "operationMetadataId": "11111111-0000-0000-0000-00000000000e"
-                      },
                       "type": "ApiConnection",
                       "inputs": {
                         "host": {
-                          "connectionName": "shared_teams",
-                          "operationId": "PostCardToConversation",
-                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+                          "connection": {
+                            "name": "@parameters('$connections')['shared_teams']['connectionId']"
+                          }
                         },
-                        "parameters": {
-                          "poster": "Flow bot",
-                          "location": "Channel",
-                          "body/recipient/groupId": "DEINE_TEAMS_GRUPPE_ID",
-                          "body/recipient/channelId": "DEIN_TEAMS_KANAL_ID",
-                          "body/messageBody": "@{\n  json(concat(\n    '{',\n    '\"$schema\":\"http://adaptivecards.io/schemas/adaptive-card.json\",',\n    '\"type\":\"AdaptiveCard\",',\n    '\"version\":\"1.4\",',\n    '\"body\":[',\n      '{\"type\":\"TextBlock\",\"text\":\"', if(greaterOrEquals(body('Parse_Claude_Response')?['prioritaet'], 4), '🔴', if(equals(body('Parse_Claude_Response')?['prioritaet'], 3), '🟡', '🟢')), ' Neue E-Mail — Priorität ', string(body('Parse_Claude_Response')?['prioritaet']), '/5\",\"weight\":\"Bolder\",\"size\":\"Large\"},',\n      '{\"type\":\"FactSet\",\"facts\":[',\n        '{\"title\":\"Von:\",\"value\":\"', variables('SenderEmail'), '\"},',\n        '{\"title\":\"Betreff:\",\"value\":\"', replace(variables('EmailSubject'), '\"', '\\\"'), '\"},',\n        '{\"title\":\"Kategorie:\",\"value\":\"', body('Parse_Claude_Response')?['kategorie'], '\"},',\n        '{\"title\":\"Antwort nötig:\",\"value\":\"', if(body('Parse_Claude_Response')?['antwort_erforderlich'], 'Ja ✓', 'Nein'), '\"},',\n        '{\"title\":\"Deadline:\",\"value\":\"', coalesce(body('Parse_Claude_Response')?['deadline'], 'Keine'), '\"}',\n      ']},',\n      '{\"type\":\"TextBlock\",\"text\":\"Zusammenfassung\",\"weight\":\"Bolder\",\"spacing\":\"Medium\"},',\n      '{\"type\":\"TextBlock\",\"text\":\"', replace(body('Parse_Claude_Response')?['zusammenfassung'], '\"', '\\\"'), '\",\"wrap\":true},',\n      '{\"type\":\"TextBlock\",\"text\":\"Empfehlung\",\"weight\":\"Bolder\",\"spacing\":\"Medium\"},',\n      '{\"type\":\"TextBlock\",\"text\":\"', replace(body('Parse_Claude_Response')?['handlungsempfehlung'], '\"', '\\\"'), '\",\"wrap\":true}',\n    ']'\n  '))\n}"
-                        },
-                        "authentication": "@parameters('$authentication')"
+                        "method": "post",
+                        "path": "/v1.0/teams/conversation/adaptivecard/poster/Flow bot/location/@{encodeURIComponent('Channel')}",
+                        "body": {
+                          "recipient": {
+                            "groupId": "DEINE_TEAMS_GRUPPE_ID",
+                            "channelId": "DEIN_TEAMS_KANAL_ID"
+                          },
+                          "messageBody": "@{concat('{\"$schema\":\"http://adaptivecards.io/schemas/adaptive-card.json\",\"type\":\"AdaptiveCard\",\"version\":\"1.4\",\"body\":[{\"type\":\"TextBlock\",\"text\":\"', if(greaterOrEquals(body('Parse_Claude_Response')?['priority'], 4), '🔴', if(equals(body('Parse_Claude_Response')?['priority'], 3), '🟡', '🟢')), ' Neue E-Mail — Prioritaet ', string(body('Parse_Claude_Response')?['priority']), '/5\",\"weight\":\"Bolder\",\"size\":\"Large\"},{\"type\":\"FactSet\",\"facts\":[{\"title\":\"Von:\",\"value\":\"', variables('SenderEmail'), '\"},{\"title\":\"Betreff:\",\"value\":\"', replace(variables('EmailSubject'), '\"', ''), '\"},{\"title\":\"Kategorie:\",\"value\":\"', body('Parse_Claude_Response')?['category'], '\"},{\"title\":\"Empfehlung:\",\"value\":\"', body('Parse_Claude_Response')?['action'], '\"}]},{\"type\":\"TextBlock\",\"text\":\"', replace(body('Parse_Claude_Response')?['reasoning'], '\"', ''), '\",\"wrap\":true}]}')}"
+                        }
                       },
                       "runAfter": {}
                     }

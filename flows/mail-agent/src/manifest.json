@@ -11,7 +11,7 @@
   "resources": {
     "a1b2c3d4-e5f6-7890-abcd-ef1234567890": {
       "type": "Microsoft.Flow/flows",
-      "designerVersion": "2",
+      "designerVersion": "1",
       "id": "/providers/Microsoft.Flow/flows/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "name": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "properties": {
@@ -20,7 +20,7 @@
           "triggers": [
             {
               "type": "ApiConnectionNotification",
-              "swaggerOperationId": "OnNewEmailV3",
+              "swaggerOperationId": "OnNewEmail",
               "metadata": {
                 "operationMetadataId": "11111111-0000-0000-0000-000000000001"
               }
@@ -28,24 +28,18 @@
           ],
           "actions": [
             {"type": "InitializeVariable"},
-            {"type": "InitializeVariable"},
-            {"type": "InitializeVariable"},
-            {"type": "InitializeVariable"},
             {"type": "If"},
-            {"type": "ApiConnection"},
             {"type": "ApiConnection"},
             {"type": "Http"},
-            {"type": "ParseJson"},
-            {"type": "If"},
-            {"type": "ApiConnection"}
+            {"type": "ParseJson"}
           ],
-          "description": "KIJA Mail Agent — Analysiert eingehende E-Mails mit Claude AI und postet Notifications in Teams."
+          "description": "KIJA Mail Agent"
         },
         "creator": {
           "tenantId": "",
           "objectId": "",
           "userId": "",
-          "userDisplayName": "KIJA"
+          "userDisplayName": ""
         },
         "flowFailureAlertSubscribed": false,
         "isManaged": false,
@@ -68,10 +62,8 @@
             },
             "runtimeSource": "invoker"
           }
-        },
-        "triggerSchema": {}
+        }
       },
-      "type": "Microsoft.Flow/flows",
       "createdTime": "2026-04-19T08:00:00Z",
       "changedTime": "2026-04-19T08:00:00Z",
       "configurableBy": "User",
@@ -83,14 +75,8 @@
       "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
       "name": "shared_office365",
       "properties": {
-        "displayName": "shared_office365",
-        "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1549/1.0.1549.2748/office365/icon.png",
-        "purpose": "NotSpecified",
-        "apiTier": "Standard",
-        "isCustomApi": false,
-        "description": "Use this connector to communicate with your Office 365 Exchange email account."
+        "displayName": "shared_office365"
       },
-      "type": "Microsoft.PowerApps/apis/connections",
       "configurableBy": "User",
       "hierarchy": "Child",
       "dependsOn": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
@@ -100,14 +86,8 @@
       "id": "/providers/Microsoft.PowerApps/apis/shared_teams",
       "name": "shared_teams",
       "properties": {
-        "displayName": "shared_teams",
-        "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1549/1.0.1549.2748/teams/icon.png",
-        "purpose": "NotSpecified",
-        "apiTier": "Standard",
-        "isCustomApi": false,
-        "description": "Microsoft Teams enables you to get all your content, tools and conversations in the Team workspace with Office 365."
+        "displayName": "shared_teams"
       },
-      "type": "Microsoft.PowerApps/apis/connections",
       "configurableBy": "User",
       "hierarchy": "Child",
       "dependsOn": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
