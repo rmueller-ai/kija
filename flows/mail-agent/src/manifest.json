@@ -19,27 +19,11 @@
         "definitionSummary": {
           "triggers": [
             {
-              "type": "ApiConnectionNotification",
-              "swaggerOperationId": "OnNewEmail",
-              "metadata": {
-                "operationMetadataId": "11111111-0000-0000-0000-000000000001"
-              }
+              "type": "ApiConnectionNotification"
             }
           ],
-          "actions": [
-            {"type": "InitializeVariable"},
-            {"type": "If"},
-            {"type": "ApiConnection"},
-            {"type": "Http"},
-            {"type": "ParseJson"}
-          ],
+          "actions": [],
           "description": "KIJA Mail Agent"
-        },
-        "creator": {
-          "tenantId": "",
-          "objectId": "",
-          "userId": "",
-          "userDisplayName": ""
         },
         "flowFailureAlertSubscribed": false,
         "isManaged": false,
@@ -70,23 +54,23 @@
       "hierarchy": "Root",
       "dependsOn": []
     },
-    "shared_office365": {
+    "shared-office365-conn": {
       "type": "Microsoft.PowerApps/apis/connections",
-      "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+      "id": "",
       "name": "shared_office365",
       "properties": {
-        "displayName": "shared_office365"
+        "displayName": "Office 365 Outlook"
       },
       "configurableBy": "User",
       "hierarchy": "Child",
       "dependsOn": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
     },
-    "shared_teams": {
+    "shared-teams-conn": {
       "type": "Microsoft.PowerApps/apis/connections",
-      "id": "/providers/Microsoft.PowerApps/apis/shared_teams",
+      "id": "",
       "name": "shared_teams",
       "properties": {
-        "displayName": "shared_teams"
+        "displayName": "Microsoft Teams"
       },
       "configurableBy": "User",
       "hierarchy": "Child",
